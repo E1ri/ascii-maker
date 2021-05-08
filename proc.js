@@ -1,29 +1,38 @@
 const sharp = require('sharp');
 
-const image = sharp('lain.png')
+const input = 'lain2.jpg'; //image name (example.jpg)
+
+const image = sharp(input);
 image
-    .resize(150, 256)
-    .gamma()
-    .grayscale()
-    .raw()
-    .toBuffer({ resolveWithObject: true })
+    .metadata()
+    .then(metadata => {
+        return image
+            .resize(Math.round(metadata.width / 4))
+            .gamma()
+            .grayscale()
+            .raw()
+            .toBuffer({ resolveWithObject: true })
+    })
     .then(({ data, info }) => {
         const pixelArray = new Uint8ClampedArray(data.buffer);
-        let newPixelArray = [];
+        const newPixelArray = [];
+        const width = info.width;
 
         for (let x of pixelArray) {
             newPixelArray.push(Math.ceil(x / 255 * 10));
         }
         return {
-            newPixelArray
+            newPixelArray,
+            width
         }
     })
-    .then((newPixelArray) => {
-        const arr = newPixelArray.newPixelArray;
+    .then((get) => {
+        const arr = get.newPixelArray;
+        const width = get.width;
         for (let n = 0; n <= arr.length; n++) {
             switch (arr[n]) {
                 case 0:
-                    arr[n] = '. '
+                    arr[n] = '  '
                     break;
             
                 case 1:
@@ -66,7 +75,7 @@ image
                     arr[n] = '@ '
                     break;
             }
-            if (n % 151 === 0) {
+            if (n % (width + 1) === 0) {
                 arr.splice(n, 0, '\n')
             }
         }
