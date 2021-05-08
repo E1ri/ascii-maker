@@ -7,7 +7,7 @@ image
     .metadata()
     .then(metadata => {
         return image
-            .resize(Math.round(metadata.width / 4))
+            .resize(Math.round(metadata.width / 4)) //You can change size here example: .resize(width, height) or .resize(Math.round(metadata.width/YOUR_NUMBER))
             .gamma()
             .grayscale()
             .raw()
