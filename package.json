@@ -1,0 +1,23 @@
+{
+  "name": "ascii-maker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "proc.js",
+  "dependencies": {
+    "sharp": "^0.28.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/E1ri/ascii-maker.git"
+  },
+  "author": "E1ri",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/E1ri/ascii-maker/issues"
+  },
+  "homepage": "https://github.com/E1ri/ascii-maker#readme"
+}
