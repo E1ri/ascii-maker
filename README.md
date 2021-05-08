@@ -1,5 +1,4 @@
-# ascii maker
-
+# ASCII MAKER
 ## Prerequisites
   * Sharp
 
