@@ -2,7 +2,7 @@ const sharp = require('sharp');
 
 const input = 'image.png'; //image name (example.jpg)
 
-const range = ` '":;!*%#$@`.split('');
+const range = ['.', ',', ':', ';', '+', '*', '?', '%', 'S', '#', '@'];
 const image = sharp(input);
 image
     .metadata()
