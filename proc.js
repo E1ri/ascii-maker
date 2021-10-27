@@ -1,6 +1,6 @@
 const sharp = require('sharp');
 
-const input = 'image.png'; //image name (example.jpg)
+const input = 'image.png'; //file name (example.jpg)
 
 const range = ['.', ',', ':', ';', '+', '*', '?', '%', 'S', '#', '@'];
 const image = sharp(input);
@@ -8,7 +8,7 @@ image
     .metadata()
     .then(metadata => {
         return image
-            .resize(Math.round(metadata.width / 5)) //You can change size here example: .resize(width, height) or .resize(Math.round(metadata.width/YOUR_NUMBER))
+            .resize(Math.round(metadata.width / 5)) //You can change size here. Example: .resize(width, height) or .resize(Math.round(metadata.width/YOUR_NUMBER))
             .gamma()
             .grayscale()
             .raw()
