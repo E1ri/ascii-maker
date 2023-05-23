@@ -22,7 +22,7 @@ image
         for (let x = 0; x < pixelArray.length; x++) {
             newPixelArray.push(range[Math.round(pixelArray[x] / 255 * 10)] + ' ');
             if (x % width === 0) {
-                newPixelArray.push('\n');
+                newPixelArray.splice(x, 1,'\n');
             }
         }
         console.log(newPixelArray.join(''));
