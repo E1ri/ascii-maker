@@ -1,5 +1,7 @@
 const sharp = require('sharp');
 const fs = require('fs').promises; // For asynchronous file operations
+const yargs = require('yargs/yargs');
+const { hideBin } = require('yargs/helpers');
 
 // Default input image path
 const DEFAULT_IMAGE_PATH = 'image.png';
@@ -54,61 +56,86 @@ function mapPixelsToAscii(data, info, characterRange) {
 }
 
 /**
+ * Parses and validates command-line arguments using yargs.
+ * @returns {object} The parsed arguments object.
+ */
+function parseAndValidateArguments() {
+  // DEFAULT_IMAGE_PATH, DEFAULT_RESIZE_FACTOR are accessible here as they are in the module scope.
+  return yargs(hideBin(process.argv))
+    .usage('Usage: $0 [imagePath] [options]')
+    .positional('imagePath', {
+      describe: 'Path to the input image file.',
+      type: 'string',
+      default: DEFAULT_IMAGE_PATH,
+    })
+    .option('resizeFactor', {
+      alias: 'r',
+      describe: 'Factor by which to divide the image width for resizing. Must be a positive number.',
+      type: 'number',
+      default: DEFAULT_RESIZE_FACTOR,
+    })
+    .option('customCharRangeString', {
+      alias: 'c',
+      describe: 'A string of characters to use for the ASCII art. e.g., ".:-=+*#%@".',
+      type: 'string',
+      default: undefined, // So we can default to ASCII_CHAR_RANGE
+    })
+    .option('outputFilePath', {
+      alias: 'o',
+      describe: 'Path to save the ASCII art. If not provided, prints to console.',
+      type: 'string',
+      default: undefined, // So script can print to console by default
+    })
+    .check((argv) => {
+      if (argv.resizeFactor <= 0) {
+        throw new Error('Error: Resize factor must be a positive number.');
+      }
+      return true;
+    })
+    .help()
+    .alias('help', 'h')
+    .version('1.0.0') // Placeholder version
+    .argv;
+}
+
+/**
  * Main function to convert an image to ASCII art.
  */
 async function main() {
-  const imagePath = process.argv[2] || DEFAULT_IMAGE_PATH;
-  
-  let resizeFactor;
-  const resizeFactorArg = process.argv[3]; // Get the command-line argument
+  const argv = parseAndValidateArguments(); // Get the arguments
 
-  if (resizeFactorArg !== undefined) {
-    // If an argument was provided, parse it
-    resizeFactor = parseInt(resizeFactorArg);
-  } else {
-    // Otherwise, use the default
-    resizeFactor = DEFAULT_RESIZE_FACTOR;
-  }
+  const { imagePath, resizeFactor, customCharRangeString, outputFilePath } = argv;
 
-  // Validate the determined resize factor
-  if (isNaN(resizeFactor) || resizeFactor <= 0) {
-    let errorMessage = "Error: Resize factor must be a positive number.";
-    if (resizeFactorArg !== undefined) { // Add more detail if user provided an arg
-        errorMessage += ` Provided value was '${resizeFactorArg}'.`;
-    }
-    console.error(errorMessage);
-    process.exit(1); 
-  }
-
-  // Determine ASCII character range
-  // Usage: node proc.js [imagePath] [resizeFactor] [customCharRangeString] [outputFilePath]
-  // Example: node proc.js image.png 5 ".:-=+*#%@" output.txt
   let currentCharRange = ASCII_CHAR_RANGE; // Default
-  const customCharRangeString = process.argv[4];
-
   if (customCharRangeString && customCharRangeString.length > 0) {
     currentCharRange = customCharRangeString.split('');
-    if (currentCharRange.length === 0) { // Should not happen if customCharRangeString.length > 0, but as a safeguard
-        console.warn("Warning: Custom character range string resulted in an empty array. Using default range.");
-        currentCharRange = ASCII_CHAR_RANGE;
+    if (currentCharRange.length === 0) {
+      console.warn("Warning: Custom character range string resulted in an empty array. Using default range.");
+      currentCharRange = ASCII_CHAR_RANGE;
     }
   }
 
   try {
     const { data, info } = await processImage(imagePath, resizeFactor);
-    const asciiArt = mapPixelsToAscii(data, info, currentCharRange); // Use determined range
+    const asciiArt = mapPixelsToAscii(data, info, currentCharRange);
     
-    const outputFilePath = process.argv[5]; // Get output file path argument
-
-    if (outputFilePath && outputFilePath.length > 0) {
-      await fs.writeFile(outputFilePath, asciiArt);
-      console.log(`ASCII art saved to ${outputFilePath}`);
-    } else {
-      console.log(asciiArt); // Default to console output
+    try {
+      if (outputFilePath && outputFilePath.length > 0) {
+        await fs.writeFile(outputFilePath, asciiArt);
+        console.log(`ASCII art saved to ${outputFilePath}`);
+      } else {
+        console.log(asciiArt); // Default to console output
+      }
+    } catch (outputError) {
+      // Be specific about where the error occurred
+      const target = outputFilePath ? `file "${outputFilePath}"` : "console";
+      console.error(`Error writing ASCII art to ${target}:`, outputError.message);
+      process.exit(1);
     }
-  } catch (error) {
-    console.error("Error processing image or writing file:", error); // Updated error message
-    // process.exit(1); // Optionally, exit on other errors too
+
+  } catch (processingError) {
+    console.error(`Error processing image "${imagePath}":`, processingError.message);
+    process.exit(1); 
   }
 }
 
@@ -117,4 +144,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { mapPixelsToAscii, processImage, DEFAULT_IMAGE_PATH, DEFAULT_RESIZE_FACTOR, ASCII_CHAR_RANGE };
+module.exports = { mapPixelsToAscii, processImage, DEFAULT_IMAGE_PATH, DEFAULT_RESIZE_FACTOR, ASCII_CHAR_RANGE, parseAndValidateArguments };
